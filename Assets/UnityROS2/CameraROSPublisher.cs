@@ -70,41 +70,37 @@
             if (!target_camera)
             {
                 target_camera = Camera.main;
+                Debug.Log("No camera found, using main camera.");
             }
-     
-            if (Camera.main)
-            {
-                renderTexture = new RenderTexture(Camera.main.pixelWidth, Camera.main.pixelHeight, 0, UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_UNorm);
-                renderTexture.Create();
-     
-                frame_width = renderTexture.width;
-                frame_height = renderTexture.height;
-     
-                frame = new Rect(0, 0, frame_width, frame_height);
-     
-                mainCameraTexture = new Texture2D(frame_width, frame_height, TextureFormat.RGBA32, false);
-     
-                header = new HeaderMsg();
-     
-                img_msg = new ImageMsg();
-     
-                img_msg.width = (uint) frame_width;
-                img_msg.height = (uint) frame_height;
-                img_msg.step = image_step * (uint) frame_width;
-                img_msg.encoding = "rgba8";
-     
-                infoCamera = CameraInfoGenerator.ConstructCameraInfoMessage(target_camera, header);
-     
-            }
-            else
-            {
-                Debug.Log("No camera found.");
-            }
+
+            renderTexture = new RenderTexture(target_camera.pixelWidth, 
+                target_camera.pixelHeight, 0, 
+                UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_UNorm);
+            
+            renderTexture.Create();
+            frame_width = renderTexture.width;
+            frame_height = renderTexture.height;
+            frame = new Rect(0, 0, frame_width, frame_height);
+
+            mainCameraTexture = new Texture2D(frame_width, 
+                frame_height, TextureFormat.RGBA32, false);
+
+            header = new HeaderMsg();
+
+            img_msg = new ImageMsg();
+            img_msg.width = (uint) frame_width;
+            img_msg.height = (uint) frame_height;
+            img_msg.step = image_step * (uint) frame_width;
+            img_msg.encoding = "rgba8";
+
+            infoCamera = CameraInfoGenerator.ConstructCameraInfoMessage(
+                target_camera, header);
         }
      
         private void Update()
         {
-            if (Camera.main)
+            // if (Camera.main)
+            if (target_camera)
             {
                 timeElapsed += Time.deltaTime;
      
@@ -116,8 +112,8 @@
                     img_msg.header = header;
                     img_msg.data = get_frame_raw();
                
-                    ros.Send(imageTopic, img_msg);
-                    ros.Send(camInfoTopic, infoCamera);
+                    ros.Publish(imageTopic, img_msg);
+                    ros.Publish(camInfoTopic, infoCamera);
      
                     timeElapsed = 0;
                 }
@@ -129,20 +125,6 @@
      
         }
     
-		/// <summary>
-		/// Vertically flips a render texture in-place.
-		/// </summary>
-		/// <param name="target">Render texture to flip.</param>
-		public static void VerticallyFlipRenderTexture(RenderTexture target)
-		{
-			var temp = RenderTexture.GetTemporary(target.descriptor);
-			Graphics.Blit(target, temp, new Vector2(1, -1), new Vector2(0, 1));
-			Graphics.Blit(temp, target);
-			RenderTexture.ReleaseTemporary(temp);
-			//log render texture
-			Debug.Log(temp);
-		} 
-
 		private void FlipTextureVertically(Texture2D original)
 		{
 			var originalPixels = original.GetPixels();
@@ -161,33 +143,26 @@
 			}
 
 
-			// return newPixels;
 			original.SetPixels(newPixels);
-			// original.Apply();
 		}
 
         private byte[] get_frame_raw()
         {      
-            Camera.main.targetTexture = renderTexture;
+            target_camera.targetTexture = renderTexture;
             lastTexture = RenderTexture.active;
 			
             RenderTexture.active = renderTexture;
-			//VerticallyFlipRenderTexture(renderTexture);
-			// var temp = RenderTexture.GetTemporary(target.descriptor);
-			// Graphics.Blit(target, temp, new Vector2(1, -1), new Vector2(0, 1));
-			// Graphics.Blit(temp, target);
-			// RenderTexture.ReleaseTemporary(temp);
 
-			Camera.main.Render();
+            target_camera.Render();
 
             mainCameraTexture.ReadPixels(frame, 0, 0);
 			FlipTextureVertically(mainCameraTexture);
             mainCameraTexture.Apply();
-     
-            Camera.main.targetTexture = lastTexture;
-     
-            Camera.main.targetTexture = null;
-     
+
+            target_camera.targetTexture = lastTexture;
+    
+            target_camera.targetTexture = null;
+            
             return mainCameraTexture.GetRawTextureData();;
         }
     }

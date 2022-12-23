@@ -16,9 +16,13 @@ public class RosPublisherExample : MonoBehaviour
     // Publish the cube's position and rotation every N seconds
     public float publishMessageFrequency = 0.1f;
     // rotation degrees per second
-    float degreesPerSecond = 180;
+    float degreesPerSecond = 25;
     // Used to determine how much time has elapsed since the last message was published
     private float timeElapsed;
+    float metersPerSecond = 2.5f;
+
+    Vector3 currentPosition;
+    Vector3 rotationVector;
 
     void Start()
     {
@@ -36,8 +40,16 @@ public class RosPublisherExample : MonoBehaviour
             // cube.transform.rotation = Random.rotation;
             //https://gamedevbeginner.com/how-to-rotate-in-unity-complete-beginners-guide/
 
-            // Rotate the cube by converting the angles into a quaternion.
-            cube.transform.Rotate(0, degreesPerSecond * Time.deltaTime, 0);
+            //move cube
+            //cube.transform.Translate( metersPerSecond * Time.deltaTime, 0, 0 );
+
+            //Rotate the cube by converting the angles into a quaternion.
+            cube.transform.Rotate(degreesPerSecond * Time.deltaTime, 0 , 0);
+            
+            // rotationVector = new Vector3(0, 0, 1); 
+            // cube.transform.RotateAround(cube.transform.parent.position, 
+            // rotationVector, degreesPerSecond * Time.deltaTime);
+
 
             //convert Unity coordinate frame to ROS coordinate frame
             Vector3<FLU> rosPos = cube.transform.position.To<FLU>();
