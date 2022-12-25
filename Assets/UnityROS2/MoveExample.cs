@@ -1,6 +1,8 @@
 using UnityEngine;
 using Unity.Robotics.ROSTCPConnector;
 using RosMessageTypes.UnityRoboticsDemo;
+using RosMessageTypes.Geometry;
+using Unity.Robotics.ROSTCPConnector.ROSGeometry;
 
 /// <summary>
 ///
@@ -8,7 +10,7 @@ using RosMessageTypes.UnityRoboticsDemo;
 public class MoveExample : MonoBehaviour
 {
     ROSConnection ros;
-    public string topicName = "new_position";
+    public string topicName = "uav_position";
 
     // The game object
     public GameObject cube;
@@ -17,6 +19,29 @@ public class MoveExample : MonoBehaviour
 
     // Used to determine how much time has elapsed since the last message was published
     private float timeElapsed;
+
+    Vector3 UnityPosition; //position of the cube in Unity coordinate frame
+    Quaternion UnityRotation; //rotation of the cube in Unity coordinate frame
+    Quaternion NewRotation;
+
+
+    PointMsg rosPoint;
+    QuaternionMsg rosRotation;
+
+
+    //for unity coordinates
+    // unity y axis is aircraft z axis
+    // unity z axis is -aircraft x axis
+    // unity x axis is -aircraft y axis
+    
+
+    //unity rotation
+    // rotation about x axis is roll 
+    // rotation about y axis is yaw
+    // rotation about z axis is pitch
+
+
+    // I need to flip the unity z axis and x axis 
 
     void Start()
     {
@@ -28,8 +53,28 @@ public class MoveExample : MonoBehaviour
 
     void MoveCube(PosRotMsg msg)
     {
-        cube.transform.position = new Vector3(msg.pos_x, msg.pos_y, msg.pos_z);
-        cube.transform.rotation = new Quaternion(msg.rot_x, msg.rot_y, msg.rot_z, msg.rot_w);
+        //convert ROS coordinate frame to Unity coordinate frame
+        rosPoint = new PointMsg(msg.pos_x, msg.pos_y, msg.pos_z);
+        UnityPosition = rosPoint.From<FLU>();
+
+        rosRotation = new QuaternionMsg(msg.rot_x, msg.rot_y, msg.rot_z, msg.rot_w);
+        UnityRotation = rosRotation.From<FLU>();
+
+        // rosRotation = (msg.rot_x, msg.rot_y, msg.rot_z, msg.rot_w);
+
+        //log the unity 
+        // Debug.Log("Unity Position: " + UnityPosition);
+
+        cube.transform.position = UnityPosition;
+        //cube.transform.Rotate(UnityRotation.eulerAngles);
+        cube.transform.rotation = UnityRotation;
+
+        //get euler angles of unity rotation
+        Vector3 euler = UnityRotation.eulerAngles;
+        // cube.transform.Rotate(euler.z, euler.y, euler.z);
+
+
+
     }
 
 }

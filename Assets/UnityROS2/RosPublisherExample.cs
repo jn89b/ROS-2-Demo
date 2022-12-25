@@ -44,12 +44,11 @@ public class RosPublisherExample : MonoBehaviour
             //cube.transform.Translate( metersPerSecond * Time.deltaTime, 0, 0 );
 
             //Rotate the cube by converting the angles into a quaternion.
-            cube.transform.Rotate(degreesPerSecond * Time.deltaTime, 0 , 0);
+            //cube.transform.Rotate(degreesPerSecond * Time.deltaTime, 0 , 0);
             
             // rotationVector = new Vector3(0, 0, 1); 
             // cube.transform.RotateAround(cube.transform.parent.position, 
             // rotationVector, degreesPerSecond * Time.deltaTime);
-
 
             //convert Unity coordinate frame to ROS coordinate frame
             Vector3<FLU> rosPos = cube.transform.position.To<FLU>();
